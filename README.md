@@ -1,0 +1,3 @@
+Use:
+./Build.bat 
+for OUTPUT AND APPLICATION OUTPUT.
