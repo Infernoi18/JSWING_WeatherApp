@@ -1,176 +1,177 @@
 package com.weatherapp;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.*;
 
 public class WeatherApp extends JFrame {
     private JTextField cityInput;
     private JButton getWeatherBtn;
     private JTextArea outputArea;
+    private JTextArea historyArea;
     private JToggleButton themeToggle;
-    private JLabel cityLabel;
-    private JPanel topInnerPanel;
+
+    private List<String> searchHistory = new ArrayList<>();
 
     private boolean isDarkMode = false;
 
-    // Font
-    private final Font emojiFont = new Font("Segoe UI Emoji", Font.PLAIN, 16);
-    private final Font emojiFontBold = new Font("Segoe UI Emoji", Font.BOLD, 16);
-
-    // Light Theme Colors (Lavender themed)
+    // Colors
     private final Color LIGHT_PRIMARY = new Color(245, 242, 255);         // Lavender background
     private final Color LIGHT_ACCENT = new Color(230, 225, 250);          // Light purple accents
-    private final Color LIGHT_TEXT = new Color(50, 50, 80);               // Deep bluish-purple text
+    private final Color LIGHT_TEXT = new Color(50, 50, 80);
 
-    // Dark Theme Colors (Greys)
-    private final Color DARK_PRIMARY = new Color(38, 38, 38);             // Dark gray background
-    private final Color DARK_ACCENT = new Color(60, 60, 60);              // Mid gray accents
-    private final Color DARK_TEXT = new Color(230, 230, 230);             // Light text for dark mode
-
-    // Toggle color for dark mode
-    private final Color TOGGLE_COLOR_DARK = new Color(128, 128, 128);     // Mid gray
+    private final Color DARK_PRIMARY = new Color(40, 40, 45);             // Dark grey
+    private final Color DARK_ACCENT = new Color(65, 65, 75);              // Mid grey
+    private final Color DARK_TEXT = new Color(230, 230, 240);
 
     public WeatherApp() {
         setTitle("☀️ Weather App");
-        setSize(500, 360);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setSize(600, 550);
+        setLayout(new BorderLayout(10, 10));
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout());
-        setUndecorated(false);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-        // Input field
+        initUI();
+
+        applyTheme();  // Initial theme
+        setVisible(true);
+    }
+
+    private void initUI() {
+        Font uiFont = new Font("Segoe UI Emoji", Font.PLAIN, 16);
+
+        // Input
         cityInput = new JTextField();
-        cityInput.setFont(emojiFont);
+        cityInput.setFont(uiFont);
         cityInput.setHorizontalAlignment(JTextField.LEFT);
-        cityInput.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
         // Button
         getWeatherBtn = new JButton("🌧️ Get Weather");
-        getWeatherBtn.setFont(emojiFont);
-        getWeatherBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        getWeatherBtn.setFont(uiFont);
         getWeatherBtn.setFocusPainted(false);
-        getWeatherBtn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        getWeatherBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Output area
-        outputArea = new JTextArea();
-        outputArea.setEditable(false);
-        outputArea.setLineWrap(true);
-        outputArea.setWrapStyleWord(true);
-        outputArea.setFont(emojiFont);
-        outputArea.setMargin(new Insets(10, 10, 10, 10));
-        JScrollPane scrollPane = new JScrollPane(outputArea);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-        // Theme toggle
-        themeToggle = new JToggleButton("🔘 Dark Mode: OFF");
-        themeToggle.setFont(emojiFont);
+        // Toggle Button
+        themeToggle = new JToggleButton("Dark Mode: OFF");
+        themeToggle.setFont(uiFont);
         themeToggle.setFocusPainted(false);
         themeToggle.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        themeToggle.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        themeToggle.addActionListener(e -> {
+        themeToggle.addItemListener(e -> {
             isDarkMode = themeToggle.isSelected();
-            themeToggle.setText(isDarkMode ? "🔘 Dark Mode: ON" : "🔘 Dark Mode: OFF");
-            fadeThemeSwitch();
+            themeToggle.setText("Dark Mode: " + (isDarkMode ? "ON" : "OFF"));
+            applyThemeWithAnimation();
         });
 
-        // Label
-        cityLabel = new JLabel("🏙️ Enter City:");
-        cityLabel.setFont(emojiFontBold);
+        // Top Panel
+        JPanel topPanel = new JPanel(new BorderLayout(10, 10));
+        topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
 
-        // Top panel
-        topInnerPanel = new JPanel(new GridBagLayout());
-        topInnerPanel.setBorder(BorderFactory.createEmptyBorder(15, 10, 10, 10));
-        topInnerPanel.setOpaque(false);
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 8, 5, 8);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        JLabel cityLabel = new JLabel("Enter City:");
+        cityLabel.setFont(uiFont);
+        cityLabel.setPreferredSize(new Dimension(100, 30));
 
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        topInnerPanel.add(cityLabel, gbc);
+        topPanel.add(cityLabel, BorderLayout.WEST);
+        topPanel.add(cityInput, BorderLayout.CENTER);
+        topPanel.add(getWeatherBtn, BorderLayout.EAST);
 
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
-        topInnerPanel.add(cityInput, gbc);
+        // Output Area
+        outputArea = new JTextArea();
+        outputArea.setEditable(false);
+        outputArea.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 15));
+        outputArea.setMargin(new Insets(10, 10, 10, 10));
+        JScrollPane outputScroll = new JScrollPane(outputArea);
+        outputScroll.setBorder(BorderFactory.createTitledBorder("Weather Info"));
 
-        gbc.gridx = 2;
-        gbc.weightx = 0;
-        topInnerPanel.add(getWeatherBtn, gbc);
+        // History Area
+        historyArea = new JTextArea();
+        historyArea.setEditable(false);
+        historyArea.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 14));
+        historyArea.setMargin(new Insets(10, 10, 10, 10));
+        JScrollPane historyScroll = new JScrollPane(historyArea);
+        historyScroll.setBorder(BorderFactory.createTitledBorder("Search History"));
+        historyScroll.setPreferredSize(new Dimension(500, 120));
 
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.gridwidth = 3;
-        gbc.anchor = GridBagConstraints.WEST;
-        topInnerPanel.add(themeToggle, gbc);
+        // Add components
+        JPanel centerPanel = new JPanel(new BorderLayout(10, 10));
+        centerPanel.add(outputScroll, BorderLayout.CENTER);
+        centerPanel.add(historyScroll, BorderLayout.SOUTH);
 
-        add(topInnerPanel, BorderLayout.NORTH);
-        add(scrollPane, BorderLayout.CENTER);
+        add(topPanel, BorderLayout.NORTH);
+        add(centerPanel, BorderLayout.CENTER);
+        add(themeToggle, BorderLayout.SOUTH);
 
-        // Weather button logic
+        // Button Logic
         getWeatherBtn.addActionListener(e -> {
             String city = cityInput.getText().trim();
             if (!city.isEmpty()) {
                 String result = WeatherService.getWeather(city);
                 outputArea.setText(result);
+                searchHistory.add("🔍 " + city + ":\n" + result + "\n");
+                updateHistoryView();
             } else {
-                outputArea.setText("⚠️ Please enter a city name.");
+                outputArea.setText("Please enter a city name.");
             }
         });
+    }
 
-        applyTheme();
-        setVisible(true);
+    private void updateHistoryView() {
+        StringBuilder sb = new StringBuilder();
+        for (String item : searchHistory) {
+            sb.append(item).append("\n--------------------------\n");
+        }
+        historyArea.setText(sb.toString());
+    }
+
+    private void applyThemeWithAnimation() {
+        Timer timer = new Timer(10, null);
+        int[] step = {0};
+
+        Color startBg = getContentPane().getBackground();
+        Color endBg = isDarkMode ? DARK_PRIMARY : LIGHT_PRIMARY;
+
+        timer.addActionListener(e -> {
+            float ratio = step[0] / 20f;
+            int r = (int) (startBg.getRed() + ratio * (endBg.getRed() - startBg.getRed()));
+            int g = (int) (startBg.getGreen() + ratio * (endBg.getGreen() - startBg.getGreen()));
+            int b = (int) (startBg.getBlue() + ratio * (endBg.getBlue() - startBg.getBlue()));
+
+            Color interpolated = new Color(r, g, b);
+            getContentPane().setBackground(interpolated);
+            step[0]++;
+            if (step[0] > 20) {
+                timer.stop();
+                applyTheme(); // Snap final state
+            }
+        });
+        timer.start();
     }
 
     private void applyTheme() {
         Color bg = isDarkMode ? DARK_PRIMARY : LIGHT_PRIMARY;
         Color accent = isDarkMode ? DARK_ACCENT : LIGHT_ACCENT;
         Color text = isDarkMode ? DARK_TEXT : LIGHT_TEXT;
-        Color toggleBtn = isDarkMode ? TOGGLE_COLOR_DARK : LIGHT_ACCENT;
 
         getContentPane().setBackground(bg);
-        topInnerPanel.setBackground(bg);
-
-        cityLabel.setForeground(text);
-        themeToggle.setForeground(text);
-        themeToggle.setBackground(toggleBtn);
-
         cityInput.setBackground(accent);
         cityInput.setForeground(text);
         cityInput.setCaretColor(text);
+        cityInput.setBorder(BorderFactory.createLineBorder(accent, 2));
 
         getWeatherBtn.setBackground(accent);
         getWeatherBtn.setForeground(text);
 
+        themeToggle.setBackground(new Color(100, 100, 110)); // Mid-grey
+        themeToggle.setForeground(Color.WHITE);
+
         outputArea.setBackground(accent);
         outputArea.setForeground(text);
-    }
 
-    private void fadeThemeSwitch() {
-        Timer timer = new Timer(20, null);
-        final float[] alpha = {0f};
-        timer.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                alpha[0] += 0.05f;
-                if (alpha[0] >= 1f) {
-                    alpha[0] = 1f;
-                    timer.stop();
-                }
-
-                applyTheme();
-                repaint();
-            }
-        });
-        timer.start();
+        historyArea.setBackground(accent);
+        historyArea.setForeground(text);
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            // Enable opacity on decorated window (requires Java 9+)
-            JFrame.setDefaultLookAndFeelDecorated(true);
-            new WeatherApp();
-        });
+        SwingUtilities.invokeLater(WeatherApp::new);
     }
 }
